@@ -90,6 +90,7 @@ class ChatFragment : Fragment(), ChatEventListener {
                         showButtons(quickOptions, response)
 
                     }
+                    //log actions_response
                     quickOptions?.joinToString { it.getText() }
                         ?.let { Log.d("actions_response", it) }
                 }
@@ -143,15 +144,9 @@ class ChatFragment : Fragment(), ChatEventListener {
     }
 
     private fun handleStatementResponse(response: StatementResponse?) {
-        botAnswer(response)
-
-    }
-
-    private fun botAnswer(response: StatementResponse?) {
         Log.d("bot_response", "botAnswer(), response = ${response.toString()}")
         var botAnswer: String? = response?.text
 
-        botAnswer
     }
 
     fun View.hideKeyboard() {
