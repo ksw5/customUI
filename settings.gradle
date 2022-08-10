@@ -1,0 +1,17 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        google()
+        mavenCentral()
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+        maven {url "https://bold360ai-mobile-artifacts.s3.amazonaws.com/android/release/"}
+    }
+}
+rootProject.name = "CustomUI"
+include ':app'
