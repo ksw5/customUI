@@ -3,23 +3,28 @@ package com.example.customui.ui
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.LinearLayout
+import androidx.fragment.app.Fragment
 import com.example.customui.BuildConfig
 import com.example.customui.databinding.FragmentChatBinding
-import com.nanorep.convesationui.structure.controller.ChatController
 import com.nanorep.convesationui.structure.controller.ChatEventListener
 import com.nanorep.nanoengine.bot.BotAccount
 import com.nanorep.nanoengine.bot.BotChat
 import com.nanorep.nanoengine.bot.BotChatListener
-import com.nanorep.nanoengine.model.conversation.statement.*
+import com.nanorep.nanoengine.model.NRChannel
+import com.nanorep.nanoengine.model.NRQuickOptionsPostback
+import com.nanorep.nanoengine.model.conversation.statement.InputMethod
+import com.nanorep.nanoengine.model.conversation.statement.OutgoingStatement
+import com.nanorep.nanoengine.model.conversation.statement.StatementFactory
+import com.nanorep.nanoengine.model.conversation.statement.StatementResponse
 import com.nanorep.sdkcore.model.StatementScope
 import com.nanorep.sdkcore.utils.NRError
+import java.lang.reflect.Type
 
 
 class ChatFragment : Fragment(), ChatEventListener {
@@ -30,14 +35,12 @@ class ChatFragment : Fragment(), ChatEventListener {
     val kb = BuildConfig.KB
     val server = BuildConfig.Server
     val name = BuildConfig.Account
+    private lateinit var nrChannel: NRChannel
 
 
-    val account = BotAccount(apiKey,name,kb,server).apply { userId }
+    val account = BotAccount(apiKey, name, kb, server).apply { userId }
     private lateinit var botChat: BotChat
-    var listener: BotChatListener? = null
-    private var chatController: ChatController? = null
-
-
+    private lateinit var listener: BotChatListener
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -72,63 +75,61 @@ class ChatFragment : Fragment(), ChatEventListener {
 
     private fun createChat() {
         botChat = BotChat(account)
-        listener = object : BotChatListener {
-            override fun conversationIdUpdated(conversationId: String) {
 
-            }
+
+        listener = object : BotChatListener {
+
+            override fun conversationIdUpdated(conversationId: String) {}
 
             override fun onResponse(response: StatementResponse) {
+
                 handleStatementResponse(response)
                 binding.botResponse.text = response.text
-                Log.d("engine_response", response.text)
 
-                if (response.optionsHandler.hasQuickOptions()) {
-                    val quickOptions = response.optionsHandler.quickOptions
+                val responseOptionsHandler = response.optionsHandler
 
-                    if (quickOptions != null) {
-                        //binding.botMultiResponse.text = quickOptions.joinToString { it.getText() }
-                        showButtons(quickOptions, response)
-
-                    }
-                    //log actions_response
-                    quickOptions?.joinToString { it.getText() }
-                        ?.let { Log.d("actions_response", it) }
+                if (responseOptionsHandler.hasQuickOptions()) {
+                    showButtons(response)
                 }
-
             }
+
 
             override fun onError(error: NRError) {
                 super.onError(error)
                 Log.e("error", "createConversation: Failed to create conversation, $error")
             }
         }
+
         botChat.setBotChatListener(listener)
         botChat.initConversation()
     }
 
-    private fun showButtons(quickOptions: List<QuickOption>, response: StatementResponse) {
+
+    private fun showButtons(response: StatementResponse) {
+
+        val quickOptions = response.optionsHandler.quickOptions
         // add a button for every item in the quickOptions list
-        for (i in quickOptions.indices) {
-            val buttons = arrayOfNulls<Button>(quickOptions.size)
-            val button = Button(requireContext())
-            val layout = binding.linearLayout
-            val buttonText = quickOptions[i].getText()
-            buttons[i] = button
-            buttons[i]?.text = buttonText
-            layout.orientation = LinearLayout.HORIZONTAL
-            layout.addView(buttons[i])
-            //click listener for quickoption buttons
-            button.setOnClickListener {
-                response.statement = buttonText
-                sendStatementToEngine(response.statement!!)
-                binding.botResponse.text = response.text
-                binding.linearLayout.removeAllViews()
+        val buttons = arrayListOf<Button>()
+        quickOptions?.forEach { quickOption ->
+            val channel = quickOption.nRchannel
+            val quickOptionText = quickOption.getText()
+            val button = Button(requireContext()).apply {
+                text = quickOptionText
+                this.setOnClickListener {
+                    response.statement = quickOptionText
+                    sendStatementToEngine(response.statement!!)
+                    binding.botResponse.text = response.text
+                    binding.linearLayout.removeAllViews()
+                }
             }
+            val layout = binding.linearLayout
 
+            buttons.add(button)
+
+            layout.orientation = LinearLayout.HORIZONTAL
+            layout.addView(button)
         }
-
     }
-
 
     private fun sendStatementToEngine(statement: String) {
         Log.d("botChat", "sendStatementToEngine(), statement = $statement")
