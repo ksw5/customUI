@@ -17,14 +17,13 @@ import com.nanorep.nanoengine.bot.BotAccount
 import com.nanorep.nanoengine.bot.BotChat
 import com.nanorep.nanoengine.bot.BotChatListener
 import com.nanorep.nanoengine.model.NRChannel
-import com.nanorep.nanoengine.model.NRQuickOptionsPostback
 import com.nanorep.nanoengine.model.conversation.statement.InputMethod
 import com.nanorep.nanoengine.model.conversation.statement.OutgoingStatement
 import com.nanorep.nanoengine.model.conversation.statement.StatementFactory
 import com.nanorep.nanoengine.model.conversation.statement.StatementResponse
+import com.nanorep.nanoengine.nonbot.EntitiesProvider
 import com.nanorep.sdkcore.model.StatementScope
 import com.nanorep.sdkcore.utils.NRError
-import java.lang.reflect.Type
 
 
 class ChatFragment : Fragment(), ChatEventListener {
@@ -41,6 +40,7 @@ class ChatFragment : Fragment(), ChatEventListener {
     val account = BotAccount(apiKey, name, kb, server).apply { userId }
     private lateinit var botChat: BotChat
     private lateinit var listener: BotChatListener
+    private var entitiesProvider: EntitiesProvider? = null
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -94,6 +94,7 @@ class ChatFragment : Fragment(), ChatEventListener {
             }
 
 
+
             override fun onError(error: NRError) {
                 super.onError(error)
                 Log.e("error", "createConversation: Failed to create conversation, $error")
@@ -106,6 +107,8 @@ class ChatFragment : Fragment(), ChatEventListener {
 
 
     private fun showButtons(response: StatementResponse) {
+
+        val responseTest = response.actions + response.optionsHandler.quickOptions
 
         val quickOptions = response.optionsHandler.quickOptions
         // add a button for every item in the quickOptions list
