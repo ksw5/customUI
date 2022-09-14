@@ -13,6 +13,9 @@ import androidx.fragment.app.Fragment
 import com.example.customui.BuildConfig
 import com.example.customui.databinding.FragmentChatBinding
 import com.nanorep.convesationui.structure.controller.ChatEventListener
+import com.nanorep.nanoengine.Entity
+import com.nanorep.nanoengine.NRAction
+import com.nanorep.nanoengine.PersonalInfoRequest
 import com.nanorep.nanoengine.bot.BotAccount
 import com.nanorep.nanoengine.bot.BotChat
 import com.nanorep.nanoengine.bot.BotChatListener
@@ -23,6 +26,7 @@ import com.nanorep.nanoengine.model.conversation.statement.StatementFactory
 import com.nanorep.nanoengine.model.conversation.statement.StatementResponse
 import com.nanorep.nanoengine.nonbot.EntitiesProvider
 import com.nanorep.sdkcore.model.StatementScope
+import com.nanorep.sdkcore.utils.Completion
 import com.nanorep.sdkcore.utils.NRError
 
 
@@ -34,13 +38,11 @@ class ChatFragment : Fragment(), ChatEventListener {
     val kb = BuildConfig.KB
     val server = BuildConfig.Server
     val name = BuildConfig.Account
-    private lateinit var nrChannel: NRChannel
 
 
     val account = BotAccount(apiKey, name, kb, server).apply { userId }
     private lateinit var botChat: BotChat
     private lateinit var listener: BotChatListener
-    private var entitiesProvider: EntitiesProvider? = null
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -103,12 +105,41 @@ class ChatFragment : Fragment(), ChatEventListener {
 
         botChat.setBotChatListener(listener)
         botChat.initConversation()
+
+        botChat.setEntitiesProvider(object : EntitiesProvider {
+            override fun provide(personalInfoRequest: PersonalInfoRequest, callback: PersonalInfoRequest.Callback) {
+                when (personalInfoRequest.id) { // this is the formatted hidden method that was injected into the article inside a "{{}}"
+                    "getAccountBalance" -> {
+                        callback.onInfoReady("BALANCE", null)
+                        return
+                    }
+                    "NewLoan" -> {
+                        callback.onInfoReady("for an immediate loan", NRAction(personalInfoRequest.id).apply {
+                            Log.d("personalInfo", "${personalInfoRequest.id} ${personalInfoRequest.userInfo}")
+                            if (userInfo != null) {
+                                personalInfoRequest.userInfo?.let{ info -> this.userInfo.putAll(info)}
+                                //this.userInfo.putAll(personalInfoRequest.userInfo)
+                            }
+
+                        }) // the action is kind of parallel retrieved info - The customer should set it according to its needs
+                        // this action will be added to the actions list on the StatementResponse
+                    }
+
+                }
+            }
+
+            override fun provide(info: ArrayList<String>, callback: Completion<ArrayList<Entity>>) {
+
+            }
+
+        })
+
     }
 
 
     private fun showButtons(response: StatementResponse) {
 
-        val responseTest = response.actions + response.optionsHandler.quickOptions
+        //val responseTest = response.actions + response.optionsHandler.quickOptions
 
         val quickOptions = response.optionsHandler.quickOptions
         // add a button for every item in the quickOptions list
