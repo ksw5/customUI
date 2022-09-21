@@ -79,6 +79,7 @@
         android:id="@+id/chat_box"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.ExposedDropdownMenu"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -92,12 +93,21 @@
         app:endIconDrawable="@drawable/ic_send"
         app:endIconCheckable="true">
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/editText"
+<!--        <com.google.android.material.textfield.TextInputEditText-->
+<!--            android:id="@+id/editText"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:background="@drawable/background_chatbox"-->
+<!--            android:backgroundTint="@color/white" />-->
+
+        <com.google.android.material.textfield.MaterialAutoCompleteTextView
+            android:id="@+id/autoComplete"
+            style="@style/Widget.MaterialComponents.AutoCompleteTextView.FilledBox"
+            android:background="@drawable/background_chatbox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/background_chatbox"
-            android:backgroundTint="@color/white" />
+            android:imeOptions="flagNoExtractUi"
+            android:completionThreshold="1"/>
     </com.google.android.material.textfield.TextInputLayout>
 
 
